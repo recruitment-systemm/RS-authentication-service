@@ -7,8 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.authenticationservice.config.Properties.JWTProperties;
-import org.example.authenticationservice.dto.request.CreateOrganizationRequest;
-import org.example.authenticationservice.dto.request.OrganizationLoginRequest;
+import org.example.authenticationservice.dto.request.*;
 import org.example.authenticationservice.dto.response.ApiResponse;
 import org.example.authenticationservice.dto.response.OrganizationResponse;
 import org.example.authenticationservice.helpers.CookieHelper;
@@ -131,5 +130,23 @@ public class OrganizationController {
         UUID organizationId = (UUID) authentication.getPrincipal();
         OrganizationResponse organizationResponse = organizationService.getProfile(organizationId);
         return ApiResponse.success(HttpStatus.OK.value(), "Profile retrieved successfully", organizationResponse);
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        organizationService.forgotPassword(request.email());
+        return ApiResponse.success(HttpStatus.OK.value(), "If an account exists with this email, a password reset link has been sent");
+    }
+
+    @PostMapping("/reset-password/verify")
+    public ApiResponse<Void> verifyResetPassword(@Valid @RequestBody VerifyResetPasswordRequest request) {
+        organizationService.verifyPasswordResetToken(request.token());
+        return ApiResponse.success(HttpStatus.OK.value(), "Password reset token is valid");
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        organizationService.resetPassword(request.token(), request.newPassword());
+        return ApiResponse.success(HttpStatus.OK.value(), "Password has been reset successfully");
     }
 }

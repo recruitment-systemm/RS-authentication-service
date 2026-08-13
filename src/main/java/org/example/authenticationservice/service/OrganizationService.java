@@ -26,6 +26,9 @@ public class OrganizationService {
     private final PasswordEncoder passwordEncoder;
     private final CloudinaryService cloudinaryService;
     private final OrganizationCacheService organizationCacheService;
+    private final PasswordResetService passwordResetService;
+    private final EmailService emailService;
+    private final RedisSessionService redisSessionService;
 
     private OrganizationResponse mapToResponse(Organization organization) {
         return OrganizationResponse.builder()
@@ -130,5 +133,36 @@ public class OrganizationService {
                 .taxRegistrationNumber(savedOrganization.getTaxRegistrationNumber())
                 .taxRegistrationDocument(savedOrganization.getTaxRegistrationDocument())
                 .build();
+    }
+
+    public void forgotPassword(String email) {
+        Organization organization = organizationRepository.findByEmail(email).orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
+        if (organization.getStatus() != OrganizationStatus.ACCEPTED) {
+            throw new OrganizationNotAcceptedException(
+                    "Organization must be accepted to reset password"
+            );
+        }
+        String token = passwordResetService.createToken(organization.getId(), Duration.ofMinutes(15));
+        String resetLink = "http://localhost:8081/reset-password?token=" + token;
+        emailService.sendPasswordResetEmail(organization.getEmail(), resetLink);
+    }
+
+    public void verifyPasswordResetToken(String token) {
+        UUID organizationId = passwordResetService.getOrganizationId(token);
+        if (organizationId == null) {
+            throw new InvalidPasswordResetTokenException("Invalid or expired password reset token");
+        }
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        UUID organizationId = passwordResetService.getOrganizationId(token);
+        if (organizationId == null) {
+            throw new InvalidPasswordResetTokenException("Invalid or expired password reset token");
+        }
+        Organization organization = organizationRepository.findById(organizationId).orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
+        organization.setPasswordHash(passwordEncoder.encode(newPassword));
+        organizationRepository.save(organization);
+        passwordResetService.deleteToken(token);
+        redisSessionService.deleteAllSessions(organizationId);
     }
 }

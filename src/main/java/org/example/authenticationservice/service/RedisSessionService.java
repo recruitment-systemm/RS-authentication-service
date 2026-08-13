@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -26,6 +27,14 @@ public class RedisSessionService {
 
     public void delete(UUID userId) {
         redisTemplate.delete(key(userId));
+    }
+
+    public void deleteAllSessions(UUID organizationId) {
+        String pattern = "session:" + organizationId + ":*";
+        Set<String> keys = redisTemplate.keys(pattern);
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
     }
 
     public boolean isValid(UUID userId, String sessionId) {
