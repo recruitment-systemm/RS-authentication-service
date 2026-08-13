@@ -33,6 +33,11 @@ public class Organization {
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
+    private OrganizationRole role;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
     private OrganizationStatus status;
 
     @Column(name = "requested_at", nullable = false)
