@@ -68,7 +68,6 @@ public class OrganizationController {
 
     @PostMapping("/login")
     public ApiResponse<OrganizationResponse> login(@Valid @RequestBody OrganizationLoginRequest request, HttpServletResponse httpResponse) {
-        System.out.println("LOGIN CONTROLLER CALLED");
         OrganizationResponse organizationResponse = organizationService.login(request);
         String sessionId = UUID.randomUUID().toString();
         Duration refreshExpiration = Duration.ofMillis(jwtProperties.getRefreshExpiration());
