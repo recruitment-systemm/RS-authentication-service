@@ -43,6 +43,20 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("RESOURCE_NOT_FOUND", null)));
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("INVALID_CREDENTIALS", null)));
+    }
+
+    @ExceptionHandler(OrganizationNotAcceptedException.class)
+    public ResponseEntity<ErrorResponse> handleOrganizationNotAccepted(OrganizationNotAcceptedException exception) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("ORGANIZATION_NOT_ACCEPTED", null)));
+    }
+
     @ExceptionHandler(FileUploadException.class)
     public ResponseEntity<ErrorResponse> handleFileUpload(FileUploadException exception) {
         log.error("File upload failed", exception);
