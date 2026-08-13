@@ -1,0 +1,25 @@
+spring:
+  config:
+    activate:
+      on-profile:
+        - dev
+
+  application:
+    name: authentication-service
+
+  datasource:
+      url: jdbc:postgresql://localhost:5433/authentication-service
+      username: postgres
+      password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:database/migration
