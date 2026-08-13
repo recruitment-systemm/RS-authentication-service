@@ -6,6 +6,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.authenticationservice.config.Properties.AdminProperties;
 import org.example.authenticationservice.service.JWTService;
 import org.example.authenticationservice.service.RedisSessionService;
 import org.springframework.stereotype.Component;
@@ -24,11 +25,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
     private final RedisSessionService redisSessionService;
+    private final AdminProperties adminProperties;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.equals("/api/v1/organizations") || path.equals("/api/v1/organizations/login") || path.equals("/api/v1/organizations/refresh");
+        return path.equals("/api/v1/organizations")
+                || path.equals("/api/v1/organizations/login")
+                || path.equals("/api/v1/organizations/refresh")
+                || path.equals("/api/v1/admin/login");
     }
 
     @Override
@@ -38,25 +43,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+
         if (!jwtService.isValid(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+
         UUID userId = jwtService.extractUserId(token);
         String sessionId = jwtService.extractSessionId(token);
+
         if (!redisSessionService.isValid(userId, sessionId)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+
+        if (isAdminRequest(request) && !adminProperties.getId().equals(userId)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                Collections.emptyList()
+        );
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isAdminRequest(HttpServletRequest request) {
+        return request.getServletPath().startsWith("/api/v1/admin/");
     }
 
     private String extractToken(HttpServletRequest request) {
         if (request.getCookies() == null) {
             return null;
         }
+
         return Arrays.stream(request.getCookies())
                 .filter(cookie -> "Access".equals(cookie.getName()))
                 .map(Cookie::getValue)
