@@ -72,4 +72,11 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(false, "Internal server error", new ErrorDetails("INTERNAL_SERVER_ERROR", null)));
     }
+
+    @ExceptionHandler(InvalidOrganizationStatusException.class)
+    public ResponseEntity<ErrorResponse> handleOrganizationStatus(InvalidOrganizationStatusException exception) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("ORGANIZATION_STATUS_ERROR", null)));
+    }
 }
