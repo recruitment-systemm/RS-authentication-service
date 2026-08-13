@@ -2,6 +2,7 @@ package org.example.authenticationservice.exceptions;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.example.authenticationservice.dto.response.ApiResponse;
 import org.example.authenticationservice.dto.response.ErrorDetails;
 import org.example.authenticationservice.dto.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
@@ -78,5 +79,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("ORGANIZATION_STATUS_ERROR", null)));
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPasswordResetToken(InvalidPasswordResetTokenException exception) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("INVALID_PASSWORD_RESET_TOKEN", null)));
+    }
+
+    @ExceptionHandler(OrganizationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrganizationNotFound(OrganizationNotFoundException exception) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("ORGANIZATION_NOT_FOUND", null)));
     }
 }
