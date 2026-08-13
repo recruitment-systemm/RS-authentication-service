@@ -39,5 +39,10 @@ jwt:
   accessExpiration: 900000
   refreshExpiration: 604800000
 
+admin:
+  id: ${ADMIN_ID}
+  email: ${ADMIN_EMAIL}
+  password: ${ADMIN_PASSWORD}
+
 server:
   port: 8081
