@@ -7,10 +7,7 @@ import org.example.authenticationservice.dto.response.OrganizationResponse;
 import org.example.authenticationservice.entity.Organization;
 import org.example.authenticationservice.entity.OrganizationRole;
 import org.example.authenticationservice.entity.OrganizationStatus;
-import org.example.authenticationservice.exceptions.InvalidCredentialsException;
-import org.example.authenticationservice.exceptions.OrganizationNotAcceptedException;
-import org.example.authenticationservice.exceptions.ResourceAlreadyExistsException;
-import org.example.authenticationservice.exceptions.ResourceNotFoundException;
+import org.example.authenticationservice.exceptions.*;
 import org.example.authenticationservice.repository.OrganizationRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -103,5 +100,35 @@ public class OrganizationService {
         OrganizationResponse organizationResponse = mapToResponse(organization);
         organizationCacheService.save(organizationResponse, Duration.ofMinutes(10));
         return organizationResponse;
+    }
+
+    public OrganizationResponse updateStatus(UUID organizationId, OrganizationStatus status) {
+        Organization organization = organizationRepository
+                .findById(organizationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
+
+        if (organization.getStatus() != OrganizationStatus.PENDING) {
+            throw new InvalidOrganizationStatusException("Organization status has already been decided");
+        }
+
+        if (status != OrganizationStatus.ACCEPTED && status != OrganizationStatus.REJECTED) {
+            throw new InvalidOrganizationStatusException("Organization status can only be ACCEPTED or REJECTED");
+        }
+
+        organization.setStatus(status);
+
+        Organization savedOrganization = organizationRepository.save(organization);
+
+        organizationCacheService.delete(organizationId);
+
+        return OrganizationResponse.builder()
+                .id(savedOrganization.getId())
+                .name(savedOrganization.getName())
+                .email(savedOrganization.getEmail())
+                .status(savedOrganization.getStatus())
+                .requestedAt(savedOrganization.getRequestedAt())
+                .taxRegistrationNumber(savedOrganization.getTaxRegistrationNumber())
+                .taxRegistrationDocument(savedOrganization.getTaxRegistrationDocument())
+                .build();
     }
 }
