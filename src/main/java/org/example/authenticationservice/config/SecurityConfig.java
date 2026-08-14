@@ -35,7 +35,10 @@ public class SecurityConfig {
                                 "/api/v1/organizations",
                                 "/api/v1/organizations/login",
                                 "/api/v1/organizations/refresh",
-                                "/api/v1/admin/login"
+                                "/api/v1/admin/login",
+                                "/api/v1/organizations/linkedin",
+                                "/api/v1/organizations/linkedin/callback",
+                                "/api/v1/organizations/linkedin/signup/complete"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
