@@ -1,0 +1,3 @@
+dn: ou=organizations,dc=recruitment,dc=local
+objectClass: organizationalUnit
+ou: organizations

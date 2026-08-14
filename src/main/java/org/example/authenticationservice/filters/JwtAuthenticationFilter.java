@@ -41,7 +41,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/api/v1/admin/login")
                 || path.equals("/api/v1/organizations/linkedin")
                 || path.equals("/api/v1/organizations/linkedin/callback")
-                || path.equals("/api/v1/organizations/linkedin/signup/complete");
+                || path.equals("/api/v1/organizations/linkedin/signup/complete")
+                || path.equals("/api/v1/employees/login");
     }
 
     @Override
