@@ -122,4 +122,10 @@ public class GlobalExceptionHandler {
         }
         return new ValidationError(error.getObjectName(), error.getDefaultMessage());
     }
+
+    @ExceptionHandler(InvalidEmployeeEmailException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidEmployeeEmail(InvalidEmployeeEmailException ex) {
+        ErrorResponse response = new ErrorResponse(false, ex.getMessage(), new ErrorDetails("INVALID_EMPLOYEE_EMAIL", null));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 }
