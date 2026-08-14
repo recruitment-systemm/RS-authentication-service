@@ -41,6 +41,12 @@ spring:
           starttls:
             enable: true
 
+  ldap:
+      urls: ldap://localhost:389
+      base: dc=recruitment,dc=local
+      username: cn=admin,dc=recruitment,dc=local
+      password: admin
+
 cloudinary:
   cloudName: ${CLOUDINARY_CLOUD_NAME}
   apiKey: ${CLOUDINARY_API_KEY}
