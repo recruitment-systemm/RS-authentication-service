@@ -20,7 +20,23 @@ services:
     volumes:
       - redis-data:/data
 
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: recruitment-openldap
+    restart: unless-stopped
+    environment:
+      LDAP_ORGANISATION: "Recruitment Platform"
+      LDAP_DOMAIN: "recruitment.local"
+      LDAP_ADMIN_PASSWORD: admin
+    ports:
+      - "389:389"
+      - "636:636"
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
 
 volumes:
   postgres_data:
   redis-data:
+  ldap_data:
+  ldap_config:
