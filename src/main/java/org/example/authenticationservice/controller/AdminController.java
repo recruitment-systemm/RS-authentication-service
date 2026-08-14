@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -50,5 +51,17 @@ public class AdminController {
     public ApiResponse<OrganizationResponse> updateOrganizationStatus(@PathVariable UUID organizationId, @Valid @RequestBody OrganizationStatusUpdateRequest request) {
         OrganizationResponse organizationResponse = organizationService.updateStatus(organizationId, request.status());
         return ApiResponse.success(HttpStatus.OK.value(), "Organization status updated successfully", organizationResponse);
+    }
+
+    @GetMapping("/organizations")
+    public ApiResponse<List<OrganizationResponse>> getAllOrganizations() {
+        List<OrganizationResponse> organizations = adminService.getAllOrganizations();
+        return ApiResponse.success(HttpStatus.OK.value(), "Organizations retrieved successfully", organizations);
+    }
+
+    @GetMapping("/organizations/{organizationId}")
+    public ApiResponse<OrganizationResponse> getOrganization(@PathVariable UUID organizationId) {
+        OrganizationResponse organizationResponse = adminService.getOrganizationById(organizationId);
+        return ApiResponse.success(HttpStatus.OK.value(), "Organization retrieved successfully", organizationResponse);
     }
 }
