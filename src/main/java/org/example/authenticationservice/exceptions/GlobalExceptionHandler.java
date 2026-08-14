@@ -1,12 +1,13 @@
 package org.example.authenticationservice.exceptions;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
-import org.example.authenticationservice.dto.response.ApiResponse;
 import org.example.authenticationservice.dto.response.ErrorDetails;
 import org.example.authenticationservice.dto.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,6 +25,19 @@ public class GlobalExceptionHandler {
                 .getFieldErrors()
                 .stream()
                 .map(error -> new ValidationError(error.getField(), error.getDefaultMessage()))
+                .toList();
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(false, "Validation failed", new ErrorDetails("VALIDATION_ERROR", errors)));
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ErrorResponse> handleBindingValidation(BindException exception) {
+        List<ValidationError> errors = exception
+                .getBindingResult()
+                .getAllErrors()
+                .stream()
+                .map(this::toValidationError)
                 .toList();
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -62,8 +76,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleFileUpload(FileUploadException exception) {
         log.error("File upload failed", exception);
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(false, "Failed to upload document", new ErrorDetails("FILE_UPLOAD_ERROR", null)));
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("FILE_UPLOAD_ERROR", null)));
     }
 
     @ExceptionHandler(Exception.class)
@@ -88,10 +102,24 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("INVALID_PASSWORD_RESET_TOKEN", null)));
     }
 
+    @ExceptionHandler(InvalidLinkedInSignupTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidLinkedInSignupToken(InvalidLinkedInSignupTokenException exception) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("INVALID_LINKEDIN_SIGNUP_TOKEN", null)));
+    }
+
     @ExceptionHandler(OrganizationNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleOrganizationNotFound(OrganizationNotFoundException exception) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("ORGANIZATION_NOT_FOUND", null)));
+    }
+
+    private ValidationError toValidationError(ObjectError error) {
+        if (error instanceof FieldError fieldError) {
+            return new ValidationError(fieldError.getField(), fieldError.getDefaultMessage());
+        }
+        return new ValidationError(error.getObjectName(), error.getDefaultMessage());
     }
 }
