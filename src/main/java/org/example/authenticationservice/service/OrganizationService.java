@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.authenticationservice.dto.request.CreateOrganizationRequest;
 import org.example.authenticationservice.dto.request.OrganizationLoginRequest;
 import org.example.authenticationservice.dto.response.OrganizationResponse;
+import org.example.authenticationservice.entity.AuthProvider;
 import org.example.authenticationservice.entity.Organization;
 import org.example.authenticationservice.entity.OrganizationRole;
 import org.example.authenticationservice.entity.OrganizationStatus;
@@ -61,6 +62,7 @@ public class OrganizationService {
                 .requestedAt(OffsetDateTime.now())
                 .taxRegistrationNumber(request.taxRegistrationNumber())
                 .taxRegistrationDocument(documentUrl)
+                .authProvider(AuthProvider.LOCAL)
                 .build();
         Organization saved = organizationRepository.save(organization);
         return OrganizationResponse.builder()

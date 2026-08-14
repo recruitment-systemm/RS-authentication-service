@@ -7,21 +7,23 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.authenticationservice.config.Properties.JWTProperties;
+import org.example.authenticationservice.dto.request.CompleteLinkedInSignupRequest;
+import org.example.authenticationservice.dto.LinkedInSignupData;
 import org.example.authenticationservice.dto.request.*;
 import org.example.authenticationservice.dto.response.ApiResponse;
+import org.example.authenticationservice.dto.response.LinkedInTokenResponse;
+import org.example.authenticationservice.dto.response.LinkedInUserInfoResponse;
 import org.example.authenticationservice.dto.response.OrganizationResponse;
 import org.example.authenticationservice.helpers.CookieHelper;
-import org.example.authenticationservice.service.JWTService;
-import org.example.authenticationservice.service.OrganizationService;
-import org.example.authenticationservice.service.RedisSessionService;
+import org.example.authenticationservice.service.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
@@ -29,12 +31,14 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/organizations")
 @RequiredArgsConstructor
-@Service
 public class OrganizationController {
     private final OrganizationService organizationService;
     private final JWTService jwtService;
     private final RedisSessionService redisSessionService;
     private final JWTProperties jwtProperties;
+    private final LinkedInOAuthService linkedInOAuthService;
+    private final LinkedInSignupService linkedInSignupService;
+    private final LinkedInSignupCompletionService linkedInSignupCompletionService;
 
     private String extractAccessToken(HttpServletRequest request) {
         if (request.getCookies() == null) {
@@ -148,5 +152,39 @@ public class OrganizationController {
     public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         organizationService.resetPassword(request.token(), request.newPassword());
         return ApiResponse.success(HttpStatus.OK.value(), "Password has been reset successfully");
+    }
+
+    @GetMapping("/linkedin")
+    public void linkedinLogin(HttpServletResponse response) throws IOException {
+        String state = UUID.randomUUID().toString();
+        redisSessionService.saveLinkedInState(state, Duration.ofMinutes(10));
+        String authorizationUrl = linkedInOAuthService.buildAuthorizationUrl(state);
+        response.sendRedirect(authorizationUrl);
+    }
+
+    @GetMapping("/linkedin/callback")
+    public void linkedinCallback(@RequestParam String code, @RequestParam String state, HttpServletResponse response) throws IOException {
+        LinkedInTokenResponse tokenResponse = linkedInOAuthService.exchangeCodeForToken(code);
+        LinkedInUserInfoResponse userInfo = linkedInOAuthService.getUserInfo(tokenResponse.accessToken());
+        String signupToken = linkedInSignupService.save(
+                new LinkedInSignupData(
+                        userInfo.sub(),
+                        userInfo.name(),
+                        userInfo.email(),
+                        userInfo.givenName(),
+                        userInfo.familyName(),
+                        userInfo.picture()
+                ),
+                Duration.ofMinutes(10)
+        );
+        response.sendRedirect("http://localhost:3000/signup/linkedin?token=" + signupToken);
+        System.out.println(signupToken);
+    }
+
+    @PostMapping(value = "/linkedin/signup/complete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<OrganizationResponse> completeLinkedInSignup(@Valid @ModelAttribute CompleteLinkedInSignupRequest request) {
+        OrganizationResponse response = linkedInSignupCompletionService.complete(request);
+        return ApiResponse.success(HttpStatus.CREATED.value(), "LinkedIn organization signup completed successfully", response);
     }
 }

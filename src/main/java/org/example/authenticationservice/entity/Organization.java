@@ -48,4 +48,12 @@ public class Organization {
 
     @Column(name = "tax_registration_document", nullable = false)
     private String taxRegistrationDocument;
+
+    @Column(name = "linkedin_id", unique = true)
+    private String linkedinId;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "auth_provider", nullable = false)
+    private AuthProvider authProvider;
 }
