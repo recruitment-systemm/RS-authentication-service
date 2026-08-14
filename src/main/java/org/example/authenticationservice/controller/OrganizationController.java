@@ -178,7 +178,6 @@ public class OrganizationController {
                 Duration.ofMinutes(10)
         );
         response.sendRedirect("http://localhost:3000/signup/linkedin?token=" + signupToken);
-        System.out.println(signupToken);
     }
 
     @PostMapping(value = "/linkedin/signup/complete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
