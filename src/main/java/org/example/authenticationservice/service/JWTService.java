@@ -19,7 +19,9 @@ public class JWTService {
 
     public JWTService(JWTProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
-        this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
+        this.key = Keys.hmacShaKeyFor(
+                jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     public String generateAccessToken(UUID userId, String sessionId) {
@@ -33,9 +35,35 @@ public class JWTService {
                 .compact();
     }
 
+    public String generateAccessToken(UUID userId, UUID organizationId, String role, String sessionId) {
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("organizationId", organizationId.toString())
+                .claim("role", role)
+                .claim("sessionId", sessionId)
+                .claim("type", "access")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessExpiration()))
+                .signWith(key)
+                .compact();
+    }
+
     public String generateRefreshToken(UUID userId, String sessionId) {
         return Jwts.builder()
                 .subject(userId.toString())
+                .claim("sessionId", sessionId)
+                .claim("type", "refresh")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshExpiration()))
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateRefreshToken(UUID userId, UUID organizationId, String role, String sessionId) {
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("organizationId", organizationId.toString())
+                .claim("role", role)
                 .claim("sessionId", sessionId)
                 .claim("type", "refresh")
                 .issuedAt(new Date())
@@ -62,6 +90,15 @@ public class JWTService {
 
     public String extractTokenType(String token) {
         return extractClaims(token).get("type", String.class);
+    }
+
+    public UUID extractOrganizationId(String token) {
+        String organizationId = extractClaims(token).get("organizationId", String.class);
+        return organizationId != null ? UUID.fromString(organizationId) : null;
+    }
+
+    public String extractRole(String token) {
+        return extractClaims(token).get("role", String.class);
     }
 
     public boolean isValid(String token) {

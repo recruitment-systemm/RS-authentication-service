@@ -40,11 +40,10 @@ public class EmployeeController {
         String sessionId = UUID.randomUUID().toString();
         Duration refreshExpiration = Duration.ofMillis(jwtProperties.getRefreshExpiration());
         redisSessionService.save(employeeResponse.id(), sessionId, refreshExpiration);
-        String accessToken = jwtService.generateAccessToken(employeeResponse.id(), sessionId);
-        String refreshToken = jwtService.generateRefreshToken(employeeResponse.id(), sessionId);
+        String accessToken = jwtService.generateAccessToken(employeeResponse.id(), employeeResponse.organizationId(), employeeResponse.role().name(), sessionId);
+        String refreshToken = jwtService.generateRefreshToken(employeeResponse.id(), employeeResponse.organizationId(), employeeResponse.role().name(), sessionId);
         CookieHelper.addTokenCookie(httpResponse, "Access", accessToken, jwtProperties.getAccessExpiration());
         CookieHelper.addTokenCookie(httpResponse, "Refresh", refreshToken, jwtProperties.getRefreshExpiration());
         return employeeResponse;
     }
-
 }
