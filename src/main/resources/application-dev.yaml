@@ -75,5 +75,9 @@ admin:
 frontend:
   url: ${FRONTEND_URL:http://localhost:5173}
 
+app:
+  cookie:
+    cross-site: ${APP_COOKIE_CROSS_SITE:false}
+
 server:
   port: 8081
