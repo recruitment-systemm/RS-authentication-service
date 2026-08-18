@@ -35,6 +35,7 @@ public class SecurityConfig {
                                 "/api/v1/organizations",
                                 "/api/v1/organizations/login",
                                 "/api/v1/organizations/refresh",
+                                "/api/v1/organizations/lookup",
                                 "/api/v1/admin/login",
                                 "/api/v1/organizations/linkedin",
                                 "/api/v1/organizations/linkedin/callback",
@@ -50,7 +51,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Set-Cookie"));
