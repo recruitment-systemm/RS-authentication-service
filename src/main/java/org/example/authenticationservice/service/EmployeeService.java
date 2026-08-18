@@ -18,6 +18,7 @@ import org.example.authenticationservice.repository.OrganizationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -82,14 +83,34 @@ public class EmployeeService {
 
         Employee savedEmployee = employeeRepository.save(employee);
 
+        return toResponse(savedEmployee);
+    }
+
+    public EmployeeResponse getProfile(UUID employeeId) {
+        Employee employee = employeeRepository
+                .findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+
+        return toResponse(employee);
+    }
+
+    public List<EmployeeResponse> listByOrganization(UUID organizationId) {
+        return employeeRepository
+                .findByOrganizationIdOrderByFirstNameAsc(organizationId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private EmployeeResponse toResponse(Employee employee) {
         return EmployeeResponse.builder()
-                .id(savedEmployee.getId())
-                .username(savedEmployee.getUsername())
-                .firstName(savedEmployee.getFirstName())
-                .lastName(savedEmployee.getLastName())
-                .email(savedEmployee.getEmail())
-                .role(savedEmployee.getRole())
-                .organizationId(organization.getId())
+                .id(employee.getId())
+                .username(employee.getUsername())
+                .firstName(employee.getFirstName())
+                .lastName(employee.getLastName())
+                .email(employee.getEmail())
+                .role(employee.getRole())
+                .organizationId(employee.getOrganization().getId())
                 .build();
     }
 
@@ -125,14 +146,6 @@ public class EmployeeService {
             throw new InvalidCredentialsException("Invalid username or password");
         }
 
-        return EmployeeResponse.builder()
-                .id(employee.getId())
-                .username(employee.getUsername())
-                .firstName(employee.getFirstName())
-                .lastName(employee.getLastName())
-                .email(employee.getEmail())
-                .role(employee.getRole())
-                .organizationId(organization.getId())
-                .build();
+        return toResponse(employee);
     }
 }

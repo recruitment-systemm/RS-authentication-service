@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -32,6 +33,18 @@ public class EmployeeController {
     public EmployeeResponse createEmployee(@Valid @RequestBody CreateEmployeeRequest request, Authentication authentication) {
         UUID organizationId = (UUID) authentication.getPrincipal();
         return employeeService.createEmployee(organizationId, request);
+    }
+
+    @GetMapping("/profile")
+    public EmployeeResponse profile(Authentication authentication) {
+        UUID employeeId = (UUID) authentication.getPrincipal();
+        return employeeService.getProfile(employeeId);
+    }
+
+    @GetMapping
+    public List<EmployeeResponse> listEmployees(Authentication authentication) {
+        UUID organizationId = (UUID) authentication.getPrincipal();
+        return employeeService.listByOrganization(organizationId);
     }
 
     @PostMapping("/login")
