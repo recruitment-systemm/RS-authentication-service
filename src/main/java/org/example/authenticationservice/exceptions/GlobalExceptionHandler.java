@@ -11,6 +11,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.List;
 
@@ -80,6 +81,13 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("FILE_UPLOAD_ERROR", null)));
     }
 
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException exception) {
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(new ErrorResponse(false, "File is too large", new ErrorDetails("FILE_TOO_LARGE", null)));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception exception) {
         log.error("Unhandled exception", exception);
@@ -114,6 +122,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("ORGANIZATION_NOT_FOUND", null)));
+    }
+
+    @ExceptionHandler(AmbiguousOrganizationDomainException.class)
+    public ResponseEntity<ErrorResponse> handleAmbiguousOrganizationDomain(AmbiguousOrganizationDomainException exception) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("AMBIGUOUS_ORGANIZATION_DOMAIN", null)));
     }
 
     private ValidationError toValidationError(ObjectError error) {
