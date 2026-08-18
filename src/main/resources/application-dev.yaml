@@ -47,6 +47,11 @@ spring:
       username: cn=admin,dc=recruitment,dc=local
       password: admin
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 cloudinary:
   cloudName: ${CLOUDINARY_CLOUD_NAME}
   apiKey: ${CLOUDINARY_API_KEY}
@@ -66,6 +71,9 @@ admin:
   id: ${ADMIN_ID}
   email: ${ADMIN_EMAIL}
   password: ${ADMIN_PASSWORD}
+
+frontend:
+  url: ${FRONTEND_URL:http://localhost:5173}
 
 server:
   port: 8081
