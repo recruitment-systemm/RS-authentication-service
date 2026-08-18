@@ -19,6 +19,7 @@ import org.example.authenticationservice.service.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,6 +40,9 @@ public class OrganizationController {
     private final LinkedInOAuthService linkedInOAuthService;
     private final LinkedInSignupService linkedInSignupService;
     private final LinkedInSignupCompletionService linkedInSignupCompletionService;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     private String extractAccessToken(HttpServletRequest request) {
         if (request.getCookies() == null) {
@@ -99,7 +103,12 @@ public class OrganizationController {
             if (!redisSessionService.isValid(userId, sessionId)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-            String accessToken = jwtService.generateAccessToken(userId, sessionId);
+
+            String organizationIdClaim = claims.get("organizationId", String.class);
+            String role = claims.get("role", String.class);
+            String accessToken = (organizationIdClaim != null && role != null)
+                    ? jwtService.generateAccessToken(userId, UUID.fromString(organizationIdClaim), role, sessionId)
+                    : jwtService.generateAccessToken(userId, sessionId);
             CookieHelper.addTokenCookie(response, "Access", accessToken, jwtProperties.getAccessExpiration());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -127,6 +136,12 @@ public class OrganizationController {
         CookieHelper.deleteCookie(response, "Access");
         CookieHelper.deleteCookie(response, "Refresh");
         return ApiResponse.success(HttpStatus.OK.value(), "Logout successful");
+    }
+
+    @GetMapping("/lookup")
+    public ApiResponse<org.example.authenticationservice.dto.response.OrganizationLookupResponse> lookup(@RequestParam String employeeEmail) {
+        UUID organizationId = organizationService.findOrganizationIdByEmployeeEmail(employeeEmail);
+        return ApiResponse.success(HttpStatus.OK.value(), "Organization found", new org.example.authenticationservice.dto.response.OrganizationLookupResponse(organizationId));
     }
 
     @GetMapping("/profile")
@@ -177,7 +192,7 @@ public class OrganizationController {
                 ),
                 Duration.ofMinutes(10)
         );
-        response.sendRedirect("http://localhost:3000/signup/linkedin?token=" + signupToken);
+        response.sendRedirect(frontendUrl + "/signup/linkedin?token=" + signupToken);
     }
 
     @PostMapping(value = "/linkedin/signup/complete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

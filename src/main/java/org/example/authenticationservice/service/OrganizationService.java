@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -105,6 +106,23 @@ public class OrganizationService {
         OrganizationResponse organizationResponse = mapToResponse(organization);
         organizationCacheService.save(organizationResponse, Duration.ofMinutes(10));
         return organizationResponse;
+    }
+
+    public UUID findOrganizationIdByEmployeeEmail(String employeeEmail) {
+        int atIndex = employeeEmail.lastIndexOf('@');
+        if (atIndex == -1 || atIndex == employeeEmail.length() - 1) {
+            throw new ResourceNotFoundException("Organization not found");
+        }
+        String domain = employeeEmail.substring(atIndex + 1);
+        List<Organization> matches = organizationRepository.findByEmailEndingWithIgnoreCase("@" + domain);
+
+        if (matches.isEmpty()) {
+            throw new ResourceNotFoundException("Organization not found");
+        }
+        if (matches.size() > 1) {
+            throw new AmbiguousOrganizationDomainException("Multiple organizations share this email domain — sign in with your organization id instead");
+        }
+        return matches.get(0).getId();
     }
 
     public OrganizationResponse updateStatus(UUID organizationId, OrganizationStatus status) {
