@@ -79,5 +79,9 @@ app:
   cookie:
     cross-site: ${APP_COOKIE_CROSS_SITE:false}
 
+springdoc:
+  swagger-ui:
+    path: /docs
+
 server:
   port: 8081
