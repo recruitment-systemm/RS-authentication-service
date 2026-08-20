@@ -8,9 +8,11 @@ import org.example.authenticationservice.config.Properties.JWTProperties;
 import org.example.authenticationservice.dto.request.AdminLoginRequest;
 import org.example.authenticationservice.dto.request.OrganizationStatusUpdateRequest;
 import org.example.authenticationservice.dto.response.ApiResponse;
+import org.example.authenticationservice.dto.response.EmployeeResponse;
 import org.example.authenticationservice.dto.response.OrganizationResponse;
 import org.example.authenticationservice.helpers.CookieHelper;
 import org.example.authenticationservice.service.AdminService;
+import org.example.authenticationservice.service.EmployeeService;
 import org.example.authenticationservice.service.JWTService;
 import org.example.authenticationservice.service.OrganizationService;
 import org.example.authenticationservice.service.RedisSessionService;
@@ -32,6 +34,7 @@ public class AdminController {
     private final JWTService jwtService;
     private final RedisSessionService redisSessionService;
     private final OrganizationService organizationService;
+    private final EmployeeService employeeService;
 
     @PostMapping("/login")
     public ApiResponse<?> login( @Valid @RequestBody AdminLoginRequest request, HttpServletResponse httpResponse){
@@ -63,5 +66,11 @@ public class AdminController {
     public ApiResponse<OrganizationResponse> getOrganization(@PathVariable UUID organizationId) {
         OrganizationResponse organizationResponse = adminService.getOrganizationById(organizationId);
         return ApiResponse.success(HttpStatus.OK.value(), "Organization retrieved successfully", organizationResponse);
+    }
+
+    @GetMapping("/organizations/{organizationId}/employees")
+    public ApiResponse<List<EmployeeResponse>> getOrganizationEmployees(@PathVariable UUID organizationId) {
+        List<EmployeeResponse> employees = employeeService.listByOrganization(organizationId);
+        return ApiResponse.success(HttpStatus.OK.value(), "Employees retrieved successfully", employees);
     }
 }
