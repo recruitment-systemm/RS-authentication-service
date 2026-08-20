@@ -25,10 +25,7 @@ public class PasswordResetService {
 
     public UUID getOrganizationId(String token) {
         String value = redisTemplate.opsForValue().get(key(token));
-        if (value == null) {
-            return null;
-        }
-        return UUID.fromString(value);
+        return value == null ? null : UUID.fromString(value);
     }
 
     public void deleteToken(String token) {
