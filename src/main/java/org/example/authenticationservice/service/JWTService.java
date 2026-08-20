@@ -48,6 +48,30 @@ public class JWTService {
                 .compact();
     }
 
+    public String generateAdminAccessToken(UUID adminId, String sessionId) {
+        return Jwts.builder()
+                .subject(adminId.toString())
+                .claim("role", "ADMIN")
+                .claim("sessionId", sessionId)
+                .claim("type", "access")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessExpiration()))
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateAdminRefreshToken(UUID adminId, String sessionId) {
+        return Jwts.builder()
+                .subject(adminId.toString())
+                .claim("role", "ADMIN")
+                .claim("sessionId", sessionId)
+                .claim("type", "refresh")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshExpiration()))
+                .signWith(key)
+                .compact();
+    }
+
     public String generateRefreshToken(UUID userId, String sessionId) {
         return Jwts.builder()
                 .subject(userId.toString())

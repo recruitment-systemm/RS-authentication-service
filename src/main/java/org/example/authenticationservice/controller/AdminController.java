@@ -40,8 +40,8 @@ public class AdminController {
         String sessionId = UUID.randomUUID().toString();
         Duration refreshExpiration = Duration.ofMillis(jwtProperties.getRefreshExpiration());
         redisSessionService.save(adminId, sessionId, refreshExpiration);
-        String accessToken = jwtService.generateAccessToken(adminId, sessionId);
-        String refreshToken = jwtService.generateRefreshToken(adminId, sessionId);
+        String accessToken = jwtService.generateAdminAccessToken(adminId, sessionId);
+        String refreshToken = jwtService.generateAdminRefreshToken(adminId, sessionId);
         CookieHelper.addTokenCookie(httpResponse, "Access", accessToken, jwtProperties.getAccessExpiration());
         CookieHelper.addTokenCookie(httpResponse, "Refresh", refreshToken, jwtProperties.getRefreshExpiration());
         return ApiResponse.success(HttpStatus.OK.value(), "Admin login successful");
