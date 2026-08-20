@@ -56,6 +56,11 @@ public class OrganizationService {
         if (organizationRepository.existsByTaxRegistrationNumber(request.taxRegistrationNumber())) {
             throw new ResourceAlreadyExistsException("Tax registration number already exists");
         }
+        String domain = request.email().substring(request.email().lastIndexOf('@') + 1);
+        boolean domainBlocked = organizationRepository.findByEmailEndingWithIgnoreCase("@" + domain).stream().anyMatch(org -> org.getStatus() == OrganizationStatus.PENDING || org.getStatus() == OrganizationStatus.ACCEPTED);
+        if (domainBlocked) {
+            throw new ResourceAlreadyExistsException("An organization with this email domain is already pending review or has been accepted");
+        }
         String documentUrl = cloudinaryService.uploadDocument(document);
         Organization organization = Organization.builder()
                 .id(UUID.randomUUID())
