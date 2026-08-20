@@ -10,6 +10,7 @@ import org.example.authenticationservice.entity.OrganizationRole;
 import org.example.authenticationservice.entity.OrganizationStatus;
 import org.example.authenticationservice.exceptions.*;
 import org.example.authenticationservice.repository.OrganizationRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,9 @@ public class OrganizationService {
     private final PasswordResetService passwordResetService;
     private final EmailService emailService;
     private final RedisSessionService redisSessionService;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     private OrganizationResponse mapToResponse(Organization organization) {
         return OrganizationResponse.builder()
@@ -163,7 +167,7 @@ public class OrganizationService {
             );
         }
         String token = passwordResetService.createToken(organization.getId(), Duration.ofMinutes(15));
-        String resetLink = "http://localhost:8081/reset-password?token=" + token;
+        String resetLink = frontendUrl + "/reset-password?token=" + token;
         emailService.sendPasswordResetEmail(organization.getEmail(), resetLink);
     }
 
