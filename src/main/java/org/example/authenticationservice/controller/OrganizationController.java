@@ -40,6 +40,7 @@ public class OrganizationController {
     private final LinkedInOAuthService linkedInOAuthService;
     private final LinkedInSignupService linkedInSignupService;
     private final LinkedInSignupCompletionService linkedInSignupCompletionService;
+    private final RateLimiterService rateLimiterService;
 
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -75,6 +76,8 @@ public class OrganizationController {
 
     @PostMapping("/login")
     public ApiResponse<OrganizationResponse> login(@Valid @RequestBody OrganizationLoginRequest request, HttpServletResponse httpResponse) {
+        rateLimiterService.checkNotBlocked("org-login", request.email());
+        rateLimiterService.recordAttempt("org-login", request.email(), 5);
         OrganizationResponse organizationResponse = organizationService.login(request);
         String sessionId = UUID.randomUUID().toString();
         Duration refreshExpiration = Duration.ofMillis(jwtProperties.getRefreshExpiration());
@@ -153,6 +156,8 @@ public class OrganizationController {
 
     @PostMapping("/forgot-password")
     public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        rateLimiterService.checkNotBlocked("forgot-password", request.email());
+        rateLimiterService.recordAttempt("forgot-password", request.email(), 2);
         organizationService.forgotPassword(request.email());
         return ApiResponse.success(HttpStatus.OK.value(), "If an account exists with this email, a password reset link has been sent");
     }

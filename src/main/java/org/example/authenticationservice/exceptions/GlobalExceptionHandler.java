@@ -143,4 +143,11 @@ public class GlobalExceptionHandler {
         ErrorResponse response = new ErrorResponse(false, ex.getMessage(), new ErrorDetails("INVALID_EMPLOYEE_EMAIL", null));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(RateLimitExceededException exception) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(new ErrorResponse(false, exception.getMessage(), new ErrorDetails("RATE_LIMIT_EXCEEDED", null)));
+    }
 }

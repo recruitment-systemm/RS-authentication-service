@@ -10,6 +10,7 @@ import org.example.authenticationservice.dto.response.EmployeeResponse;
 import org.example.authenticationservice.helpers.CookieHelper;
 import org.example.authenticationservice.service.EmployeeService;
 import org.example.authenticationservice.service.JWTService;
+import org.example.authenticationservice.service.RateLimiterService;
 import org.example.authenticationservice.service.RedisSessionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,7 @@ public class EmployeeController {
     private final JWTService jwtService;
     private final RedisSessionService redisSessionService;
     private final JWTProperties jwtProperties;
+    private final RateLimiterService rateLimiterService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -49,6 +51,9 @@ public class EmployeeController {
 
     @PostMapping("/login")
     public EmployeeResponse login(@Valid @RequestBody EmployeeLoginRequest request, HttpServletResponse httpResponse) {
+        String rateLimitKey = request.organizationId() + ":" + request.username();
+        rateLimiterService.checkNotBlocked("employee-login", rateLimitKey);
+        rateLimiterService.recordAttempt("employee-login", rateLimitKey, 5);
         EmployeeResponse employeeResponse = employeeService.login(request);
         String sessionId = UUID.randomUUID().toString();
         Duration refreshExpiration = Duration.ofMillis(jwtProperties.getRefreshExpiration());

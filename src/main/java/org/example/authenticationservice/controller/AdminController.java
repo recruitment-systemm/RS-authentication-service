@@ -15,6 +15,7 @@ import org.example.authenticationservice.service.AdminService;
 import org.example.authenticationservice.service.EmployeeService;
 import org.example.authenticationservice.service.JWTService;
 import org.example.authenticationservice.service.OrganizationService;
+import org.example.authenticationservice.service.RateLimiterService;
 import org.example.authenticationservice.service.RedisSessionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -35,9 +36,12 @@ public class AdminController {
     private final RedisSessionService redisSessionService;
     private final OrganizationService organizationService;
     private final EmployeeService employeeService;
+    private final RateLimiterService rateLimiterService;
 
     @PostMapping("/login")
     public ApiResponse<?> login( @Valid @RequestBody AdminLoginRequest request, HttpServletResponse httpResponse){
+        rateLimiterService.checkNotBlocked("admin-login", request.email());
+        rateLimiterService.recordAttempt("admin-login", request.email(), 5);
         adminService.login(request);
         UUID adminId = adminProperties.getId();
         String sessionId = UUID.randomUUID().toString();
